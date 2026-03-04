@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # "django.contrib.gis",  <-- Tạm tắt để tránh lỗi driver trên Python 3.14
+    'django.contrib.humanize',
     "app",
 ]
 

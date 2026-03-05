@@ -1,0 +1,25 @@
+{% extends 'app/home.html' %} {% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h4 class="text-center fw-bold mb-4">Đăng Nhập</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="small fw-bold">Tên đăng nhập</label>
+                            <input type="text" name="username" class="form-control rounded-pill">
+                        </div>
+                        <div class="mb-4">
+                            <label class="small fw-bold">Mật khẩu</label>
+                            <input type="password" name="password" class="form-control rounded-pill">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">VÀO HỆ THỐNG</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -91,3 +91,14 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Trang để đăng nhập
 LOGIN_URL = 'login'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'nha_thuoc',       # Tên database mình vừa thống nhất
+        'USER': 'postgres',        # User mặc định (như trong ảnh bạn gửi)
+        'PASSWORD': 'admin123',    # Mật khẩu bạn vừa cung cấp
+        'HOST': '127.0.0.1',       # Chạy tại máy local
+        'PORT': '5432',            # Cổng mặc định của PostgreSQL
+    }
+}

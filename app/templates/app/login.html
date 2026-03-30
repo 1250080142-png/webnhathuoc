@@ -1,25 +1,91 @@
-{% extends 'app/home.html' %} {% block content %}
+{% extends 'app/home.html' %} {% load static %} {% block content %}
 <div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow border-0 rounded-4">
-                <div class="card-body p-5">
-                    <h4 class="text-center fw-bold mb-4">Đăng Nhập</h4>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="small fw-bold">Tên đăng nhập</label>
-                            <input type="text" name="username" class="form-control rounded-pill">
-                        </div>
-                        <div class="mb-4">
-                            <label class="small fw-bold">Mật khẩu</label>
-                            <input type="password" name="password" class="form-control rounded-pill">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">VÀO HỆ THỐNG</button>
-                    </form>
-                </div>
+  <div class="row justify-content-center">
+    <div class="col-md-4">
+      <div class="card shadow border-0 rounded-4">
+        <div class="card-body p-5 text-center">
+          <h4 class="fw-bold mb-4" style="color: #0056b3">ĐĂNG NHẬP</h4>
+
+          {% if messages %} {% for message in messages %}
+          <div class="alert alert-danger small py-2 rounded-pill mb-3 border-0">
+            {{ message }}
+          </div>
+          {% endfor %} {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3 text-start">
+              <label class="small fw-bold mb-1 ms-2">Tên đăng nhập</label>
+              <input
+                type="text"
+                name="username"
+                class="form-control rounded-pill bg-light ps-3 py-2"
+                placeholder="Tên tài khoản..."
+                required
+              />
             </div>
+            <div class="mb-4 text-start">
+              <label class="small fw-bold mb-1 ms-2">Mật khẩu</label>
+              <input
+                type="password"
+                name="password"
+                class="form-control rounded-pill bg-light ps-3 py-2"
+                placeholder="••••••"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm"
+            >
+              VÀO HỆ THỐNG
+            </button>
+          </form>
+
+          <div class="mt-4 pt-3 border-top">
+            <p class="small text-muted mb-2">Chưa có tài khoản?</p>
+            <a
+              href="{% url 'register' %}"
+              class="btn btn-outline-primary btn-sm w-100 rounded-pill py-2 fw-bold"
+              >ĐĂNG KÝ NGAY</a
+            >
+          </div>
         </div>
+      </div>
     </div>
+  </div>
+
+  <div class="row mt-5">
+    <h3 class="mb-4 text-center fw-bold">Sản phẩm gợi ý</h3>
+    <div class="row g-3">
+      {% for item in medicines %}
+      <div class="col-md-3 mb-4">
+        <div class="card h-100 border-0 shadow-sm rounded-3">
+          <img
+            src="{{ item.image_url|default:'https://nhathuoclongchau.com.vn/images/default-product.png' }}"
+            class="card-img-top p-3"
+            alt="{{ item.name }}"
+            style="height: 150px; object-fit: contain"
+            onerror="
+              this.src =
+                'https://nhathuoclongchau.com.vn/images/default-product.png'
+            "
+          />
+          <div class="card-body text-center">
+            <h6 class="fw-bold text-truncate">{{ item.name }}</h6>
+            <p class="text-primary fw-bold">
+              {{ item.price }}đ / {{ item.unit }}
+            </p>
+            <button class="btn btn-primary btn-sm rounded-pill px-4">
+              Chọn mua
+            </button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">Đang cập nhật sản phẩm...</p>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 {% endblock %}

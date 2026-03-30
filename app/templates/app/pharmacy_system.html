@@ -16,17 +16,23 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"
+    />
+
     <style>
       :root {
         --primary-blue: #0052cc;
       }
       body {
         background-color: #f4f7fa;
-        font-family: sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
       }
       .navbar {
         height: 60px;
+        z-index: 1000;
       }
       .main-content {
         height: calc(100vh - 60px);
@@ -39,6 +45,7 @@
         border-right: 1px solid #dee2e6;
         overflow-y: auto;
         padding: 20px;
+        z-index: 999;
       }
       .map-container {
         flex-grow: 1;
@@ -48,80 +55,165 @@
         height: 100%;
         width: 100%;
       }
-      .search-box {
-        background: #fff;
-        border-radius: 8px;
-        border: 1px solid #ced4da;
+
+      /* --- CSS CHO CÁC THÀNH PHẦN TRÊN BẢN ĐỒ --- */
+      .map-custom-search {
+        background: white;
         padding: 10px;
-        margin-bottom: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        width: 320px;
+        margin-left: 10px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
       }
+      .map-custom-search input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 0 12px;
+        font-size: 15px;
+      }
+
+      .map-custom-locate {
+        background: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        color: var(--primary-blue);
+        font-size: 22px;
+        margin-right: 20px;
+        margin-bottom: 30px;
+        transition: all 0.2s ease;
+      }
+      .map-custom-locate:hover {
+        background: #f8f9fa;
+        color: #dc3545;
+        transform: scale(1.1);
+      }
+
+      /* --- HIỆU ỨNG ĐIỂM MÀU XANH (USER LOCATION) --- */
+      .user-location-marker {
+        background: #248afd;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 10px rgba(36, 138, 253, 0.7);
+        position: relative;
+      }
+      /* Hiệu ứng vòng tròn tỏa ra */
+      .user-location-marker::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        border-radius: 50%;
+        background: #248afd;
+        animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955)
+          infinite;
+        z-index: -1;
+      }
+      @keyframes pulse-ring {
+        0% {
+          transform: scale(0.3);
+          opacity: 0.8;
+        }
+        80%,
+        100% {
+          transform: scale(2.5);
+          opacity: 0;
+        }
+      }
+
+      /* Các style khác */
       .pharmacy-item {
         padding: 15px;
-        border-radius: 8px;
+        border-radius: 12px;
         border: 1px solid #eee;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         cursor: pointer;
         transition: 0.2s;
+        position: relative;
+        background: #fff;
       }
       .pharmacy-item:hover {
         background-color: #f0f4fb;
         border-color: var(--primary-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
       .pharmacy-name {
         font-weight: bold;
         color: var(--primary-blue);
         margin-bottom: 5px;
-      }
-      .pharmacy-info {
-        font-size: 0.85rem;
-        color: #666;
+        padding-right: 70px;
       }
       .distance-tag {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: bold;
         color: #dc3545;
         background: #ffebeb;
-        padding: 2px 8px;
-        border-radius: 12px;
-        float: right;
+        padding: 3px 10px;
+        border-radius: 20px;
+        position: absolute;
+        top: 15px;
+        right: 15px;
       }
-      .sidebar::-webkit-scrollbar {
-        width: 6px;
+      .btn-direction {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        border-radius: 20px;
+        width: 100%;
       }
-      .sidebar::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 10px;
+      .leaflet-routing-container {
+        display: none;
       }
     </style>
   </head>
   <body>
     <nav class="navbar navbar-dark bg-primary shadow-sm">
       <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="#"
+        <a class="navbar-brand fw-bold" href="/"
           ><i class="fas fa-plus-square me-2"></i>NHÀ THUỐC GIS</a
         >
-        <span class="text-white small"
-          >Chi nhánh Long Châu - Quận Tân Bình</span
+        <span class="text-white small d-none d-md-inline"
+          >Quận Tân Bình - TP. Hồ Chí Minh</span
         >
       </div>
     </nav>
 
     <div class="main-content">
       <div class="sidebar">
-        <h5 class="fw-bold mb-3">Tìm kiếm nhà thuốc</h5>
-        <div class="search-box">
-          <div class="input-group">
-            <span class="input-group-text bg-transparent border-0"
-              ><i class="fas fa-search text-muted"></i
-            ></span>
-            <input
-              type="text"
-              id="searchInput"
-              class="form-control border-0 shadow-none"
-              placeholder="Nhập tên đường..."
-              onkeyup="searchPharmacy()"
-            />
-          </div>
+        <h5 class="fw-bold mb-3">Tìm kiếm điểm bán</h5>
+        <div
+          class="input-group mb-3"
+          style="
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            overflow: hidden;
+          "
+        >
+          <span class="input-group-text bg-white border-0"
+            ><i class="fas fa-search text-muted"></i
+          ></span>
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control border-0 shadow-none"
+            placeholder="Tìm trên danh sách..."
+            onkeyup="searchPharmacy()"
+          />
         </div>
         <div id="pharmacyList" class="list-group list-group-flush mt-3"></div>
       </div>
@@ -131,112 +223,143 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
     <script>
-      // 1. Dữ liệu thực tế nhà thuốc
       const pharmacies = [
         {
           name: "Long Châu 177 Hoàng Hoa Thám",
           address: "47 Hoàng Hoa Thám, P.13, Tân Bình",
-          phone: "1800 6928",
           lat: 10.79989,
           lon: 106.64713,
         },
         {
           name: "Long Châu 112 Trường Chinh",
           address: "112-114 Trường Chinh, P.12, Tân Bình",
-          phone: "1800 6928",
           lat: 10.79435,
           lon: 106.651,
         },
         {
           name: "Long Châu Thân Nhân Trung",
           address: "16 Thân Nhân Trung, P.13, Tân Bình",
-          phone: "1800 6928",
           lat: 10.80314,
           lon: 106.64261,
         },
         {
           name: "Long Châu 1010 Âu Cơ",
           address: "1010 Âu Cơ, P.14, Tân Bình",
-          phone: "1800 6928",
           lat: 10.79927,
           lon: 106.6374,
         },
         {
           name: "Long Châu 1KA Bình Giã",
           address: "1KA Bình Giã, P.13, Tân Bình",
-          phone: "1800 6928",
           lat: 10.79883,
           lon: 106.64418,
         },
       ];
 
       let userLocation = null;
+      let routingControl = null;
+      let userMarker = null;
 
-      // 2. Khởi tạo bản đồ
-      var map = L.map("map").setView([10.799, 106.645], 14);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
+      var map = L.map("map", { zoomControl: false }).setView(
+        [10.799, 106.645],
+        14,
+      );
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+          attribution: "&copy; CartoDB",
+        },
+      ).addTo(map);
 
-      // 3. Hàm tính khoảng cách Haversine (Chuẩn xác cho bản đồ)
-      function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Bán kính Trái Đất (km)
-        const dLat = ((lat2 - lat1) * Math.PI) / 180;
-        const dLon = ((lon2 - lon1) * Math.PI) / 180;
-        const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return (R * c).toFixed(2); // Trả về km làm tròn 2 chữ số
-      }
+      L.control.zoom({ position: "topright" }).addTo(map);
 
-      // 4. Hiển thị danh sách và Marker
-      function renderPharmacies(data) {
-        const listContainer = document.getElementById("pharmacyList");
-        listContainer.innerHTML = `<p class="text-muted small">Nhà thuốc gợi ý (${data.length})</p>`;
+      // --- THANH TÌM KIẾM ---
+      const MapSearchControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd: function () {
+          const div = L.DomUtil.create("div", "map-custom-search");
+          div.innerHTML = `<i class="fas fa-search text-muted"></i><input type="text" id="mapInnerSearch" placeholder="Tìm tên đường...">`;
+          L.DomEvent.disableClickPropagation(div);
+          div.querySelector("input").addEventListener("keyup", function (e) {
+            if (e.key === "Enter") searchGlobal(this.value);
+          });
+          return div;
+        },
+      });
+      map.addControl(new MapSearchControl());
 
-        data.forEach((p) => {
-          L.marker([p.lat, p.lon])
-            .addTo(map)
-            .bindPopup(`<b>${p.name}</b><br>${p.address}`);
+      // --- NÚT ĐỊNH VỊ ---
+      const MapLocateControl = L.Control.extend({
+        options: { position: "bottomright" },
+        onAdd: function () {
+          const div = L.DomUtil.create("div", "map-custom-locate");
+          div.innerHTML = '<i class="fas fa-location-crosshairs"></i>';
+          L.DomEvent.disableClickPropagation(div);
+          div.onclick = function () {
+            locateUser();
+          };
+          return div;
+        },
+      });
+      map.addControl(new MapLocateControl());
 
-          let distanceHtml = "";
-          if (userLocation) {
-            const dist = calculateDistance(
-              userLocation.lat,
-              userLocation.lng,
-              p.lat,
-              p.lon,
-            );
-            distanceHtml = `<span class="distance-tag">${dist} km</span>`;
+      async function searchGlobal(query) {
+        if (!query) return;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+          );
+          const data = await res.json();
+          if (data.length > 0) {
+            const pos = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            map.flyTo(pos, 16);
+            L.marker(pos).addTo(map).bindPopup(`<b>${query}</b>`).openPopup();
+          } else {
+            alert("Không tìm thấy vị trí!");
           }
+        } catch (err) {
+          console.error(err);
+        }
+      }
 
-          const item = document.createElement("div");
-          item.className = "pharmacy-item";
-          item.onclick = () => flyToLocation(p.lat, p.lon, p.name);
-          item.innerHTML = `
-            ${distanceHtml}
-            <div class="pharmacy-name">${p.name}</div>
-            <div class="pharmacy-info">
-              <i class="fas fa-map-marker-alt me-1"></i> ${p.address}<br />
-              <i class="fas fa-phone me-1"></i> ${p.phone}
-            </div>
-          `;
-          listContainer.appendChild(item);
+      // HÀM ĐỊNH VỊ CHÍNH
+      function locateUser() {
+        // map.locate sẽ kích hoạt sự kiện locationfound bên dưới
+        map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true });
+      }
+
+      map.on("locationfound", function (e) {
+        userLocation = e.latlng;
+
+        // Xóa marker cũ nếu đã tồn tại
+        if (userMarker) map.removeLayer(userMarker);
+
+        // Tạo icon màu xanh với hiệu ứng pulse
+        const userIcon = L.divIcon({
+          className: "user-location-marker",
+          html: "<div></div>",
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
         });
-      }
 
-      function flyToLocation(lat, lon, name) {
-        map.flyTo([lat, lon], 17, { animate: true, duration: 1.5 });
-        L.popup()
-          .setLatLng([lat, lon])
-          .setContent("<b>" + name + "</b>")
-          .openOn(map);
-      }
+        // Thêm marker mới và hiển thị popup
+        userMarker = L.marker(e.latlng, { icon: userIcon })
+          .addTo(map)
+          .bindPopup("Bạn đang ở đây")
+          .openPopup();
+
+        // Cập nhật khoảng cách trong danh sách
+        renderPharmacies(pharmacies);
+      });
+
+      map.on("locationerror", function () {
+        alert(
+          "Không thể xác định vị trí. Vui lòng cấp quyền GPS cho trình duyệt.",
+        );
+      });
 
       function searchPharmacy() {
         const query = document
@@ -250,17 +373,50 @@
         renderPharmacies(filtered);
       }
 
-      // 5. Lấy vị trí người dùng để tính khoảng cách thực tế
-      map.locate({ setView: false, maxZoom: 16 });
-      map.on("locationfound", function (e) {
-        userLocation = e.latlng;
-        L.circle(e.latlng, e.accuracy / 2).addTo(map); // Vẽ vòng tròn vị trí người dùng
-        L.marker(e.latlng).addTo(map).bindPopup("Vị trí của bạn").openPopup();
-        renderPharmacies(pharmacies); // Vẽ lại danh sách sau khi có vị trí để hiện số km
-      });
+      function drawRoute(destLat, destLon) {
+        if (!userLocation) {
+          alert("Vui lòng bật định vị trước!");
+          locateUser();
+          return;
+        }
+        if (routingControl) map.removeControl(routingControl);
+        routingControl = L.Routing.control({
+          waypoints: [
+            L.latLng(userLocation.lat, userLocation.lng),
+            L.latLng(destLat, destLon),
+          ],
+          lineOptions: {
+            styles: [{ color: "#0052cc", weight: 6, opacity: 0.8 }],
+          },
+          createMarker: () => null,
+          addWaypoints: false,
+          draggableWaypoints: false,
+        }).addTo(map);
+      }
 
-      // Khởi tạo ban đầu
+      function renderPharmacies(data) {
+        const listContainer = document.getElementById("pharmacyList");
+        listContainer.innerHTML = `<p class="text-muted small">Kết quả phù hợp (${data.length})</p>`;
+        data.forEach((p) => {
+          L.marker([p.lat, p.lon]).addTo(map).bindPopup(`<b>${p.name}</b>`);
+          let distHtml = "";
+          if (userLocation) {
+            const dist = (
+              L.latLng(userLocation).distanceTo([p.lat, p.lon]) / 1000
+            ).toFixed(2);
+            distHtml = `<span class="distance-tag">${dist} km</span>`;
+          }
+          const item = document.createElement("div");
+          item.className = "pharmacy-item shadow-sm";
+          item.innerHTML = `${distHtml}<div class="pharmacy-name">${p.name}</div><div class="pharmacy-info"><i class="fas fa-map-marker-alt me-1"></i> ${p.address}</div><button class="btn btn-outline-primary btn-sm btn-direction" onclick="event.stopPropagation(); drawRoute(${p.lat}, ${p.lon})"><i class="fas fa-directions me-1"></i> CHỈ ĐƯỜNG</button>`;
+          item.onclick = () => map.flyTo([p.lat, p.lon], 17);
+          listContainer.appendChild(item);
+        });
+      }
+
       renderPharmacies(pharmacies);
+      // Tự động định vị khi vừa tải trang
+      locateUser();
     </script>
   </body>
 </html>

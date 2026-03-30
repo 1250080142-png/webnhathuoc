@@ -51,13 +51,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "webnhathuoc.wsgi.application"
 
-# --- 5. CƠ SỞ DỮ LIỆU ---
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
 
 # --- 6. KIỂM TRA MẬT KHẨU ---
 AUTH_PASSWORD_VALIDATORS = [
@@ -97,8 +90,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'nha_thuoc',       # Tên database mình vừa thống nhất
         'USER': 'postgres',        # User mặc định (như trong ảnh bạn gửi)
-        'PASSWORD': 'admin123',    # Mật khẩu bạn vừa cung cấp
+        'PASSWORD': '123',    # Mật khẩu bạn vừa cung cấp
         'HOST': '127.0.0.1',       # Chạy tại máy local
         'PORT': '5432',            # Cổng mặc định của PostgreSQL
     }
 }
+
+import os
+
+# Cấu hình đường dẫn lưu trữ file (Media)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

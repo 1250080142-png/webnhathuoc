@@ -37,7 +37,7 @@ class Medicine(models.Model):
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    image_url = models.URLField(max_length=1000, null=True, blank=True)
+    image_url = models.CharField(max_length=255, null=True, blank=True)
     unit = models.CharField(max_length=50, help_text="Vỉ, Hộp, Viên")
     min_stock_level = models.IntegerField(default=10)
 
@@ -67,3 +67,10 @@ class Invoice(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
+
+class MedicineImage(models.Model):
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='medicines/') # Ảnh lưu vào media/medicines/
+
+    def __str__(self):
+        return f"Ảnh của {self.medicine.name}"

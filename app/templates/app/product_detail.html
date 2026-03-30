@@ -3,43 +3,68 @@
   <div class="row">
     <div class="col-md-5 text-center border-end">
       <img
-        src="{{ medicine.image_url }}"
-        class="img-fluid"
-        style="max-height: 400px"
+        src="{% if medicine.image_url %}{{ medicine.image_url }}{% else %}https://via.placeholder.com/400x400.png?text=No+Image{% endif %}"
+        class="img-fluid rounded"
+        style="max-height: 400px; object-fit: contain"
       />
     </div>
 
     <div class="col-md-7 ps-md-5">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-          <li class="breadcrumb-item active">{{ medicine.category }}</li>
+          <li class="breadcrumb-item">
+            <a href="/" class="text-decoration-none">Trang chủ</a>
+          </li>
+          <li class="breadcrumb-item active text-primary">
+            {{ medicine.category }}
+          </li>
         </ol>
       </nav>
-      <h2 class="fw-bold">{{ medicine.name }}</h2>
-      <p class="text-muted small">Mã sản phẩm: #{{ medicine.id }}</p>
+
+      <h2 class="fw-bold text-dark">{{ medicine.name }}</h2>
+      <p class="text-muted small">
+        Mã sản phẩm: <span class="fw-bold">#{{ medicine.id }}</span>
+      </p>
       <hr />
+
       <h3 class="text-primary fw-bold">
         {{ medicine.price|floatformat:0|intcomma }}đ
         <small class="text-muted fs-6">/ {{ medicine.unit }}</small>
       </h3>
 
-      <div class="my-4 p-3 bg-light rounded">
-        <h6><strong>Mô tả sản phẩm:</strong></h6>
-        <p>
-          {{ medicine.description|default:"Viên uống bổ gan Kanzo Gold là giải
-          pháp tối ưu giúp bảo vệ và phục hồi tế bào gan, đặc biệt phù hợp cho
-          người thường xuyên sử dụng rượu bia hoặc tiếp xúc với hóa chất độc
-          hại." }}
-        </p>
+      <div
+        class="my-4 p-4 bg-light rounded border-start border-primary border-4"
+      >
+        <h6 class="fw-bold text-dark mb-3">
+          <i class="fas fa-file-alt me-2 text-primary"></i>Mô tả sản phẩm:
+        </h6>
+        <div class="text-secondary" style="line-height: 1.6">
+          {% if medicine.description %} {{ medicine.description|linebreaks }} {%
+          else %}
+          <p>
+            Viên uống bổ gan <strong>Kanzo Gold</strong> là giải pháp tối ưu
+            giúp bảo vệ và phục hồi tế bào gan, đặc biệt phù hợp cho người
+            thường xuyên sử dụng rượu bia hoặc tiếp xúc với hóa chất độc hại.
+          </p>
+          {% endif %}
+        </div>
       </div>
 
-      <button
-        class="btn btn-primary btn-lg w-100 rounded-pill fw-bold"
-        onclick="addToCart('{{ medicine.id }}', '{{ medicine.name|escapejs }}', {{ medicine.price }})"
-      >
-        <i class="fas fa-cart-plus me-2"></i> THÊM VÀO GIỎ HÀNG
-      </button>
+      <div class="d-grid gap-2">
+        <button
+          class="btn btn-primary btn-lg rounded-pill fw-bold py-3 shadow-sm"
+          onclick="addToCart('{{ medicine.id }}', '{{ medicine.name|escapejs }}', {{ medicine.price }})"
+        >
+          <i class="fas fa-cart-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+        </button>
+
+        <a
+          href="{% url 'pharmacy_system' %}"
+          class="btn btn-outline-success rounded-pill fw-bold"
+        >
+          <i class="fas fa-map-marker-alt me-2"></i> TÌM NHÀ THUỐC GẦN ĐÂY
+        </a>
+      </div>
     </div>
   </div>
 </div>

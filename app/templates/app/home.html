@@ -123,6 +123,24 @@
         background-color: #e0a800;
         transform: scale(1.05);
       }
+      /* Hiệu ứng rung nhẹ cho icon giỏ hàng khi thêm đồ */
+      @keyframes cart-bounce {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+      }
+      .cart-animate {
+        animation: cart-bounce 0.5s ease;
+      }
+      /* Style cho nút 'Chọn mua' khi đã nhấn */
+      .btn-added {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+      }
     </style>
   </head>
   <body class="bg-light">
@@ -150,7 +168,7 @@
 
         <div class="text-white d-none d-lg-flex align-items-center">
           {% if user.is_authenticated %} {% if user.is_staff %}
-          <a href="{% url 'pharmacy_system' %}" class="btn btn-dashboard me-3">
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-dashboard me-3">
             <i class="fas fa-tachometer-alt me-1"></i> Dashboard
           </a>
           {% endif %}
@@ -180,11 +198,18 @@
             href="#"
             class="text-white text-decoration-none small position-relative"
           >
-            <i class="fas fa-shopping-cart me-1"></i> Giỏ hàng
-            <span
-              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-              >0</span
+            <a
+              href="{% url 'cart' %}"
+              class="text-white text-decoration-none small position-relative"
             >
+              <i class="fas fa-shopping-cart me-1"></i> Giỏ hàng
+              <span
+                id="cart-badge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              >
+                0
+              </span>
+            </a>
           </a>
         </div>
       </div>
@@ -295,23 +320,34 @@
             <div class="col-md-4 col-lg-3 col-6">
               <div class="card product-card position-relative">
                 <span class="badge-discount">-20%</span>
-                <div class="product-img-wrapper">
-                  <img
-                    src="{% if item.image_url %}{{ item.image_url }}{% else %}{% static 'app/images/default.png' %}{% endif %}"
-                    class="product-img"
-                    alt="{{ item.name }}"
-                  />
-                </div>
-                <div class="card-body p-3">
+
+                <a
+                  href="{% url 'product_detail' item.id %}"
+                  class="text-decoration-none"
+                >
+                  <div class="product-img-wrapper">
+                    <img
+                      src="{% if item.image_url %}{{ item.image_url }}{% else %}{% static 'app/images/default.png' %}{% endif %}"
+                      class="product-img"
+                      alt="{{ item.name }}"
+                    />
+                  </div>
+                </a>
+
+                <div class="card-body p-3 d-flex flex-column">
                   <p class="text-muted mb-1" style="font-size: 11px">
                     {{ item.category }}
                   </p>
-                  <h6
-                    class="product-title fw-bold mb-2"
-                    title="{{ item.name }}"
-                  >
-                    {{ item.name }}
+
+                  <h6 class="product-title fw-bold mb-2">
+                    <a
+                      href="{% url 'product_detail' item.id %}"
+                      class="text-decoration-none text-dark"
+                    >
+                      {{ item.name }}
+                    </a>
                   </h6>
+
                   <div class="mt-auto">
                     <p class="price-text mb-1">
                       {{ item.price|floatformat:0|intcomma }}đ
@@ -319,8 +355,10 @@
                         >/ {{ item.unit }}</span
                       >
                     </p>
+
                     <button
-                      class="btn btn-primary btn-sm w-100 rounded-pill py-2 fw-bold"
+                      class="btn btn-primary btn-sm w-100 rounded-pill py-2 fw-bold btn-buy"
+                      onclick="addToCart('{{ item.id }}', '{{ item.name|escapejs }}', {{ item.price }})"
                     >
                       Chọn mua
                     </button>
@@ -352,5 +390,64 @@
         </div>
       </div>
     </footer>
+
+    <script>
+      // Khởi tạo giỏ hàng từ localStorage hoặc mảng rỗng
+      let cart = JSON.parse(localStorage.getItem("pharmacyCart")) || [];
+
+      // Cập nhật số hiển thị trên badge ngay khi load trang
+      function updateBadge() {
+        const badge = document.getElementById("cart-badge");
+        if (!badge) return;
+
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        badge.innerText = totalItems;
+
+        // Hiệu ứng rung nhẹ cho badge
+        badge.style.animation = "none";
+        badge.offsetHeight; // trigger reflow
+        badge.style.animation = "cart-bounce 0.5s ease";
+      }
+
+      function addToCart(id, name, price) {
+        // Tìm xem sản phẩm đã có trong giỏ chưa
+        const existingItem = cart.find((item) => item.id === id);
+
+        if (existingItem) {
+          existingItem.quantity += 1;
+        } else {
+          cart.push({
+            id: id,
+            name: name,
+            price: price,
+            quantity: 1,
+          });
+        }
+
+        // Lưu vào localStorage
+        localStorage.setItem("pharmacyCart", JSON.stringify(cart));
+
+        // Cập nhật giao diện số lượng trên icon giỏ hàng
+        updateBadge();
+
+        // Hiệu ứng trên nút bấm vừa nhấn
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Đã thêm';
+        btn.classList.add("btn-success"); // Đổi sang màu xanh lá cho đẹp
+        btn.classList.remove("btn-primary");
+        btn.disabled = true;
+
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-primary");
+          btn.disabled = false;
+        }, 1000);
+      }
+
+      // Chạy cập nhật badge khi vừa mở trang
+      document.addEventListener("DOMContentLoaded", updateBadge);
+    </script>
   </body>
 </html>

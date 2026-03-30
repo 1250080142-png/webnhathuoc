@@ -48,9 +48,11 @@ def admin_dashboard(request):
 
 # 3. Hệ thống nhà thuốc (trang xem bản đồ của khách)
 def pharmacy_system(request):
-    pharmacies = Pharmacy.objects.all()
+    # Lấy toàn bộ danh sách nhà thuốc từ database
+    pharmacies_list = Pharmacy.objects.all()
+    
     return render(request, 'app/pharmacy_system.html', {
-        'pharmacies': pharmacies
+        'pharmacies': pharmacies_list # Biến này sẽ được dùng trong HTML
     })
 
 # 4. Thêm sản phẩm mới (Xử lý lỗi giá tiền rỗng)
@@ -141,3 +143,12 @@ def register(request):
 
 def login_success(request):
     return render(request, 'app/login_success.html')
+
+def cart_view(request):
+    # Thêm 'app/' vào trước tên file
+    return render(request, 'app/cart.html')
+
+def product_detail(request, pk):
+    medicine = get_object_or_404(Medicine, pk=pk)
+    # Hãy đảm bảo có 'app/' ở phía trước nếu file nằm trong templates/app/
+    return render(request, 'app/product_detail.html', {'medicine': medicine})

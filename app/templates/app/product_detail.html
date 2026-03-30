@@ -1,0 +1,46 @@
+{% extends 'app/home.html' %} {% load humanize %} {% block content %}
+<div class="container bg-white p-4 rounded shadow-sm mt-4">
+  <div class="row">
+    <div class="col-md-5 text-center border-end">
+      <img
+        src="{{ medicine.image_url }}"
+        class="img-fluid"
+        style="max-height: 400px"
+      />
+    </div>
+
+    <div class="col-md-7 ps-md-5">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+          <li class="breadcrumb-item active">{{ medicine.category }}</li>
+        </ol>
+      </nav>
+      <h2 class="fw-bold">{{ medicine.name }}</h2>
+      <p class="text-muted small">Mã sản phẩm: #{{ medicine.id }}</p>
+      <hr />
+      <h3 class="text-primary fw-bold">
+        {{ medicine.price|floatformat:0|intcomma }}đ
+        <small class="text-muted fs-6">/ {{ medicine.unit }}</small>
+      </h3>
+
+      <div class="my-4 p-3 bg-light rounded">
+        <h6><strong>Mô tả sản phẩm:</strong></h6>
+        <p>
+          {{ medicine.description|default:"Viên uống bổ gan Kanzo Gold là giải
+          pháp tối ưu giúp bảo vệ và phục hồi tế bào gan, đặc biệt phù hợp cho
+          người thường xuyên sử dụng rượu bia hoặc tiếp xúc với hóa chất độc
+          hại." }}
+        </p>
+      </div>
+
+      <button
+        class="btn btn-primary btn-lg w-100 rounded-pill fw-bold"
+        onclick="addToCart('{{ medicine.id }}', '{{ medicine.name|escapejs }}', {{ medicine.price }})"
+      >
+        <i class="fas fa-cart-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
